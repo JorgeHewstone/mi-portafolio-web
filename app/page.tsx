@@ -1,6 +1,7 @@
-"use client"; 
+"use client";
 
 import { useState } from 'react';
+import type React from 'react'; // <-- CORRECCIÓN 1
 import ReactMarkdown from 'react-markdown';
 
 // Estilos básicos (puedes moverlos a un archivo .css)
@@ -23,9 +24,11 @@ export default function Home() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Pequeña mejora de tipo
 
-  const handleSubmit = async (e) => {
+  //                                   VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => { // <-- CORRECCIÓN 2
+  //                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     e.preventDefault();
     if (!input || isLoading) return;
 
@@ -71,7 +74,7 @@ export default function Home() {
       }
       // --- Fin de la Magia ---
 
-    } catch (err) {
+    } catch (err: any) { // Otra mejora de tipo
       console.error(err);
       setError(err.message);
       // Quita el placeholder '...' y pone el error
