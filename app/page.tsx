@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from 'react';
-import type React from 'react'; // <-- CORRECCIÓN 1
+import { useState, type CSSProperties } from 'react';
+import type React from 'react';
 import ReactMarkdown from 'react-markdown';
 
 // Estilos básicos (puedes moverlos a un archivo .css)
-const styles = {
+const styles: { [key: string]: CSSProperties } = {
   container: { maxWidth: '700px', margin: '2rem auto', fontFamily: 'Arial, sans-serif' },
   chatBox: { border: '1px solid #ccc', borderRadius: '8px', height: '400px', overflowY: 'auto', padding: '10px', marginBottom: '10px' },
   message: { marginBottom: '10px', padding: '8px', borderRadius: '5px' },
@@ -24,11 +24,9 @@ export default function Home() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Pequeña mejora de tipo
+  const [error, setError] = useState<string | null>(null);
 
-  //                                   VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => { // <-- CORRECCIÓN 2
-  //                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input || isLoading) return;
 
@@ -38,7 +36,6 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
 
-    // Añade un placeholder para la respuesta del bot
     setMessages(prev => [...prev, { role: 'bot', content: '...' }]);
 
     try {
@@ -49,13 +46,18 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        // Manejar errores (como el límite de peticiones)
         const errData = await response.json();
         throw new Error(errData.error || 'Ocurrió un error.');
       }
 
+      // ++++++++++ CORRECCIÓN AQUÍ ++++++++++
+      if (!response.body) {
+        throw new Error("La respuesta del servidor no tiene cuerpo.");
+      }
+      // +++++++++++++++++++++++++++++++++++++
+
       // --- Magia de Streaming ---
-      const reader = response.body.getReader();
+      const reader = response.body.getReader(); // <-- Esta línea ahora es segura
       const decoder = new TextDecoder();
       let accumulatedResponse = '';
 
@@ -65,19 +67,16 @@ export default function Home() {
 
         accumulatedResponse += decoder.decode(value, { stream: true });
         
-        // Actualiza el último mensaje (el placeholder '...') en tiempo real
         setMessages(prev => {
           const newMessages = [...prev];
           newMessages[newMessages.length - 1] = { role: 'bot', content: accumulatedResponse };
           return newMessages;
         });
       }
-      // --- Fin de la Magia ---
 
-    } catch (err: any) { // Otra mejora de tipo
+    } catch (err: any) {
       console.error(err);
       setError(err.message);
-      // Quita el placeholder '...' y pone el error
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
