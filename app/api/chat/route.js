@@ -10,7 +10,7 @@ const redis = Redis.fromEnv();
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(5, "1 d"), // 5 mensajes por 1 día por IP
+  limiter: Ratelimit.slidingWindow(50, "1 d"), // 5 mensajes por 1 día por IP
   analytics: true,
 });
 
@@ -23,7 +23,7 @@ export async function POST(req) {
   const { success } = await ratelimit.limit(ip);
 
   if (!success) {
-    const errorMsg = "Has alcanzado el límite de 5 mensajes. Para pedir más, mándame un correo a [tu-email@dominio.com] con una oportunidad laboral o una idea de negocio con IA.";
+    const errorMsg = "Has alcanzado el límite de 50 mensajes. Para pedir más, mándame un correo a [tu-email@dominio.com] con una oportunidad laboral o una idea de negocio con IA.";
     // Se usa NextResponse para enviar la respuesta de error
     return new NextResponse(JSON.stringify({ error: errorMsg }), { status: 429 });
   }
